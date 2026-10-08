@@ -4424,7 +4424,31 @@ document.addEventListener(
 
     }
 );
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
 
+    "tasks": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "expenses": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "history": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
 </script>
 
 </body>
