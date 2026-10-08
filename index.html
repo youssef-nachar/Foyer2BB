@@ -1500,7 +1500,6 @@ Add Expense
 
 <div class="toast" id="toast"></div>
 
-
 <script>
 
 /* =====================================================
@@ -1560,6 +1559,41 @@ const ADMIN_ID = "youssef";
 
 
 /* =====================================================
+   TRASH ROTATION
+===================================================== */
+
+/*
+ * IMPORTANT:
+ *
+ * This is the first day of the rotation.
+ *
+ * On this date:
+ * Youssef = responsible for trash.
+ *
+ * Next day:
+ * Eli
+ *
+ * Then:
+ * George
+ * Mike
+ * Anthony
+ *
+ * Then the rotation starts again with Youssef.
+ *
+ * If you want another person to start,
+ * change TRASH_START_PERSON_ID.
+ */
+
+const TRASH_START_DATE = "2026-10-08";
+
+const TRASH_START_PERSON_ID = "youssef";
+
+const TRASH_TASK_NAME = "Take Out Trash";
+
+const TRASH_TASK_ICON = "🗑️";
+
+
+/* =====================================================
    FIREBASE INITIALIZATION
 ===================================================== */
 
@@ -1589,6 +1623,8 @@ let currentUser = null;
 let currentProfile = null;
 
 let databaseListenersStarted = false;
+
+let trashEnsureRunning = false;
 
 let toastTimer;
 
@@ -1664,6 +1700,348 @@ function snapshotToArray(snapshot){
 
 
 /* =====================================================
+   DATE
+===================================================== */
+
+function today(){
+
+    const d = new Date();
+
+    const y =
+        d.getFullYear();
+
+    const m =
+        String(
+            d.getMonth()+1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            d.getDate()
+        ).padStart(2,"0");
+
+    return `${y}-${m}-${day}`;
+
+}
+
+
+/* =====================================================
+   FORMAT DATE
+===================================================== */
+
+function formatDate(date){
+
+    if(!date)
+        return "-";
+
+    return new Date(
+        date + "T00:00:00"
+    )
+    .toLocaleDateString(
+        "en-US",
+        {
+            day:"2-digit",
+            month:"short",
+            year:"numeric"
+        }
+    );
+
+}
+
+
+/* =====================================================
+   DATE DIFFERENCE
+===================================================== */
+
+function daysBetween(startDate, endDate){
+
+    const start =
+        new Date(
+            startDate + "T00:00:00"
+        );
+
+    const end =
+        new Date(
+            endDate + "T00:00:00"
+        );
+
+    const difference =
+        end.getTime() -
+        start.getTime();
+
+    return Math.floor(
+        difference /
+        (1000 * 60 * 60 * 24)
+    );
+
+}
+
+
+/* =====================================================
+   GET TODAY'S TRASH PERSON
+===================================================== */
+
+function getTodayTrashPerson(){
+
+    const startIndex =
+        USERS.findIndex(
+            user =>
+            user.id ===
+            TRASH_START_PERSON_ID
+        );
+
+
+    if(startIndex < 0){
+
+        return USERS[0];
+
+    }
+
+
+    let days =
+        daysBetween(
+            TRASH_START_DATE,
+            today()
+        );
+
+
+    /*
+     * Protect against dates before
+     * the configured start date.
+     */
+
+    if(days < 0){
+
+        days = 0;
+
+    }
+
+
+    const index =
+        (
+            startIndex +
+            days
+        ) %
+        USERS.length;
+
+
+    return USERS[index];
+
+}
+
+
+/* =====================================================
+   GET TOMORROW'S TRASH PERSON
+===================================================== */
+
+function getTomorrowTrashPerson(){
+
+    const todayPerson =
+        getTodayTrashPerson();
+
+
+    const currentIndex =
+        USERS.findIndex(
+            user =>
+            user.id ===
+            todayPerson.id
+        );
+
+
+    const nextIndex =
+        (
+            currentIndex + 1
+        ) %
+        USERS.length;
+
+
+    return USERS[nextIndex];
+
+}
+
+
+/* =====================================================
+   ENSURE TODAY'S TRASH TASK EXISTS
+===================================================== */
+
+/*
+ * This function guarantees that every day
+ * has exactly one automatic trash task.
+ *
+ * If today's task already exists:
+ *     nothing happens.
+ *
+ * If it does not exist:
+ *     a new task is created automatically.
+ */
+
+async function ensureTodayTrashTask(){
+
+    if(
+        !currentUser ||
+        !currentProfile
+    ){
+
+        return;
+
+    }
+
+
+    if(trashEnsureRunning)
+        return;
+
+
+    trashEnsureRunning = true;
+
+
+    try{
+
+        const todayDate =
+            today();
+
+
+        /*
+         * Check local realtime data first.
+         */
+
+        const alreadyExists =
+            tasks.some(
+                task =>
+                task.isTrashTask === true &&
+                task.date === todayDate
+            );
+
+
+        if(alreadyExists){
+
+            trashEnsureRunning = false;
+
+            return;
+
+        }
+
+
+        /*
+         * Check Firebase directly as well.
+         *
+         * This prevents duplicate creation
+         * if multiple realtime events happen.
+         */
+
+        const snapshot =
+            await db
+            .ref(TASKS_PATH)
+            .orderByChild("trashDate")
+            .equalTo(todayDate)
+            .once("value");
+
+
+        if(snapshot.exists()){
+
+            trashEnsureRunning = false;
+
+            return;
+
+        }
+
+
+        const trashPerson =
+            getTodayTrashPerson();
+
+
+        if(!trashPerson){
+
+            trashEnsureRunning = false;
+
+            return;
+
+        }
+
+
+        const newRef =
+            db
+            .ref(TASKS_PATH)
+            .push();
+
+
+        await newRef.set({
+
+            name:
+                TRASH_TASK_NAME,
+
+            icon:
+                TRASH_TASK_ICON,
+
+            personId:
+                trashPerson.id,
+
+            addedById:
+                "system",
+
+            date:
+                todayDate,
+
+            status:
+                "pending",
+
+            /*
+             * This identifies the task
+             * as an automatic trash task.
+             */
+
+            isTrashTask:
+                true,
+
+            trashDate:
+                todayDate,
+
+            trashRotationIndex:
+                USERS.findIndex(
+                    user =>
+                    user.id ===
+                    trashPerson.id
+                ),
+
+            createdAt:
+                firebase.database.ServerValue.TIMESTAMP,
+
+            createdBy:
+                "system"
+
+        });
+
+
+        /*
+         * Add history entry.
+         */
+
+        await addHistory(
+            "Trash Duty",
+            `🗑️ ${TRASH_TASK_NAME} — ${trashPerson.name}`
+        );
+
+
+        console.log(
+            `Trash duty created for ${trashPerson.name}`
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Could not create today's trash task:",
+            error
+        );
+
+    }
+
+
+    trashEnsureRunning = false;
+
+}
+
+
+/* =====================================================
    REALTIME DATABASE LISTENERS
 ===================================================== */
 
@@ -1678,12 +2056,14 @@ function startRealtimeListeners(){
     databaseListenersStarted = true;
 
 
-    /* TASKS */
+    /* =================================================
+       TASKS
+    ================================================= */
 
     db.ref(TASKS_PATH).on(
         "value",
 
-        snapshot => {
+        async snapshot => {
 
             tasks =
                 snapshotToArray(snapshot)
@@ -1692,6 +2072,15 @@ function startRealtimeListeners(){
                     Number(b.createdAt || 0) -
                     Number(a.createdAt || 0)
                 );
+
+
+            /*
+             * Make sure today's trash task
+             * exists whenever tasks are loaded.
+             */
+
+            await ensureTodayTrashTask();
+
 
             renderAll();
 
@@ -1710,7 +2099,9 @@ function startRealtimeListeners(){
     );
 
 
-    /* EXPENSES */
+    /* =================================================
+       EXPENSES
+    ================================================= */
 
     db.ref(EXPENSES_PATH).on(
         "value",
@@ -1742,7 +2133,9 @@ function startRealtimeListeners(){
     );
 
 
-    /* HISTORY */
+    /* =================================================
+       HISTORY
+    ================================================= */
 
     db.ref(HISTORY_PATH).on(
         "value",
@@ -1787,6 +2180,8 @@ function stopRealtimeListeners(){
     db.ref(HISTORY_PATH).off();
 
     databaseListenersStarted = false;
+
+    trashEnsureRunning = false;
 
 }
 
@@ -1894,12 +2289,6 @@ function login(){
 
     }
 
-
-    /*
-     * No Firebase Authentication is used.
-     * The user identity is taken from the
-     * hard-coded USERS array.
-     */
 
     currentProfile = profile;
 
@@ -2087,52 +2476,6 @@ function logout(){
 
     toast(
         "Logged out successfully."
-    );
-
-}
-
-
-/* =====================================================
-   DATE
-===================================================== */
-
-function today(){
-
-    const d = new Date();
-
-    const y =
-        d.getFullYear();
-
-    const m =
-        String(
-            d.getMonth()+1
-        ).padStart(2,"0");
-
-    const day =
-        String(
-            d.getDate()
-        ).padStart(2,"0");
-
-    return `${y}-${m}-${day}`;
-
-}
-
-
-function formatDate(date){
-
-    if(!date)
-        return "-";
-
-    return new Date(
-        date + "T00:00:00"
-    )
-    .toLocaleDateString(
-        "en-US",
-        {
-            day:"2-digit",
-            month:"short",
-            year:"numeric"
-        }
     );
 
 }
@@ -2403,6 +2746,26 @@ function renderTodayTasks(){
     }
 
 
+    /*
+     * Put the trash duty first.
+     */
+
+    todayTasks.sort(
+        (a,b) => {
+
+            if(a.isTrashTask && !b.isTrashTask)
+                return -1;
+
+            if(!a.isTrashTask && b.isTrashTask)
+                return 1;
+
+            return Number(b.createdAt || 0) -
+                   Number(a.createdAt || 0);
+
+        }
+    );
+
+
     box.innerHTML =
         todayTasks
         .map(taskCard)
@@ -2421,9 +2784,18 @@ function taskCard(task){
         task.status === "completed";
 
 
+    const isTrash =
+        task.isTrashTask === true;
+
+
     return `
 
-    <div class="task">
+    <div class="task"
+         style="${
+            isTrash
+            ? "border-color:rgba(251,191,36,.45);"
+            : ""
+         }">
 
         <div class="task-left">
 
@@ -2434,14 +2806,45 @@ function taskCard(task){
             <div>
 
                 <div class="task-name">
+
                     ${safe(task.name)}
+
+                    ${
+                    isTrash
+                    ?
+                    `<span style="
+                        color:var(--yellow);
+                        font-size:8px;
+                        margin-left:5px;">
+                        DAILY
+                    </span>`
+                    :
+                    ""
+                    }
+
                 </div>
 
                 <div class="task-person">
+
                     👤
                     ${safe(
                         getUserName(task.personId)
                     )}
+
+                    ${
+                    isTrash
+                    ?
+                    `
+                    <span style="
+                    color:var(--yellow);
+                    margin-left:5px;">
+                    · Trash Duty
+                    </span>
+                    `
+                    :
+                    ""
+                    }
+
                 </div>
 
                 <span class="status ${
@@ -2461,6 +2864,7 @@ function taskCard(task){
             </div>
 
         </div>
+
 
         ${
         canCompleteTask(task)
@@ -2567,7 +2971,10 @@ async function toggleTask(id){
         if(newStatus === "completed"){
 
             await addHistory(
-                "Task",
+                task.isTrashTask
+                ? "Trash Duty"
+                : "Task",
+
                 `${task.icon} ${task.name}`
             );
 
@@ -2640,6 +3047,26 @@ function renderTasks(){
     }
 
 
+    /*
+     * Trash tasks are always shown first.
+     */
+
+    filtered.sort(
+        (a,b) => {
+
+            if(a.isTrashTask && !b.isTrashTask)
+                return -1;
+
+            if(!a.isTrashTask && b.isTrashTask)
+                return 1;
+
+            return Number(b.createdAt || 0) -
+                   Number(a.createdAt || 0);
+
+        }
+    );
+
+
     const tbody =
         document.getElementById(
             "tasksTable"
@@ -2676,8 +3103,24 @@ function renderTasks(){
         <tr>
 
             <td>
+
                 ${safe(task.icon)}
+
                 ${safe(task.name)}
+
+                ${
+                task.isTrashTask
+                ?
+                `<span style="
+                color:var(--yellow);
+                font-size:8px;
+                margin-left:5px;">
+                DAILY
+                </span>`
+                :
+                ""
+                }
+
             </td>
 
             <td>
@@ -2687,9 +3130,15 @@ function renderTasks(){
             </td>
 
             <td>
-                ${safe(
+
+                ${
+                task.isTrashTask
+                ? "🤖 System"
+                : safe(
                     getUserName(task.addedById)
-                )}
+                )
+                }
+
             </td>
 
             <td>
@@ -2829,6 +3278,13 @@ async function addTask(){
     }
 
 
+    /*
+     * Normal manually-created task.
+     *
+     * Trash tasks are created automatically
+     * by ensureTodayTrashTask().
+     */
+
     try{
 
         const newRef =
@@ -2853,6 +3309,9 @@ async function addTask(){
 
             status:
                 "pending",
+
+            isTrashTask:
+                false,
 
             createdAt:
                 firebase.database.ServerValue.TIMESTAMP,
@@ -4217,11 +4676,6 @@ document.addEventListener(
         setupNavigation();
 
         setupLogin();
-
-        /*
-         * Database listeners are intentionally
-         * started after successful hard-coded login.
-         */
 
     }
 );
