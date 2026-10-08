@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,19 +6,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>FOYER — House Organizer</title>
 
-<!-- =====================================================
-     FIREBASE
-===================================================== -->
-
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
 <style>
-/* =====================================================
-   YOUR ORIGINAL UI — UNCHANGED
-===================================================== */
-
 *{box-sizing:border-box;margin:0;padding:0}
 
 :root{
@@ -47,7 +39,6 @@ min-height:100vh;
 
 button,input,select{font:inherit}
 button{cursor:pointer}
-
 .hidden{display:none!important}
 
 .login-screen{
@@ -72,10 +63,7 @@ padding:30px;
 box-shadow:0 30px 90px rgba(0,0,0,.5);
 }
 
-.login-logo{
-text-align:center;
-margin-bottom:28px;
-}
+.login-logo{text-align:center;margin-bottom:28px}
 
 .login-icon{
 width:65px;
@@ -103,10 +91,7 @@ color:var(--muted);
 margin-top:5px;
 }
 
-.login-title{
-font-size:18px;
-margin-bottom:7px;
-}
+.login-title{font-size:18px;margin-bottom:7px}
 
 .login-subtitle{
 font-size:12px;
@@ -131,9 +116,7 @@ padding:12px;
 outline:none;
 }
 
-.input:focus,.select:focus{
-border-color:var(--green);
-}
+.input:focus,.select:focus{border-color:var(--green)}
 
 .login-btn{
 width:100%;
@@ -202,10 +185,7 @@ justify-content:center;
 font-size:23px;
 }
 
-.logo h1{
-font-size:22px;
-letter-spacing:2px;
-}
+.logo h1{font-size:22px;letter-spacing:2px}
 
 .logo small{
 display:block;
@@ -237,9 +217,7 @@ background:#10263a;
 color:white;
 }
 
-.nav button.active{
-box-shadow:inset 3px 0 var(--green);
-}
+.nav button.active{box-shadow:inset 3px 0 var(--green)}
 
 .nav-icon{
 display:inline-block;
@@ -418,10 +396,7 @@ background:#14283b;
 font-size:20px;
 }
 
-.task-name{
-font-weight:bold;
-font-size:13px;
-}
+.task-name{font-weight:bold;font-size:13px}
 
 .task-person{
 color:var(--muted);
@@ -512,7 +487,6 @@ font-weight:bold;
 }
 
 .person-info{flex:1}
-
 .person-info strong{font-size:12px}
 
 .person-info small{
@@ -646,9 +620,7 @@ width:100%;
 border-collapse:collapse;
 }
 
-.table-wrap{
-overflow-x:auto;
-}
+.table-wrap{overflow-x:auto}
 
 th{
 text-align:left;
@@ -739,22 +711,6 @@ border-radius:16px;
 
 .setting h3{margin-bottom:16px}
 
-.name-row{
-display:flex;
-gap:8px;
-margin-bottom:9px;
-}
-
-.name-number{
-width:30px;
-display:flex;
-justify-content:center;
-align-items:center;
-color:var(--muted);
-}
-
-.name-row input{flex:1}
-
 .modal{
 position:fixed;
 inset:0;
@@ -838,9 +794,7 @@ margin-left:0;
 width:100%;
 padding:14px;
 }
-.mobile-menu{
-display:block;
-}
+.mobile-menu{display:block}
 .topbar{align-items:flex-start}
 .title h2{font-size:21px}
 .date{font-size:9px}
@@ -903,7 +857,8 @@ id="loginPin"
 type="password"
 inputmode="numeric"
 maxlength="6"
-placeholder="Enter your PIN">
+placeholder="Enter your PIN"
+onkeydown="if(event.key==='Enter') login()">
 
 <button
 class="login-btn"
@@ -911,18 +866,17 @@ onclick="login()">
 LOGIN
 </button>
 
-<div class="login-error" id="loginError">
-Incorrect PIN. Please try again.
-</div>
+<div class="login-error" id="loginError"></div>
 
 <div class="demo-note">
-Each person has their own account and PIN.
+Your account and PIN are defined directly in the FOYER application.
 <br>
-Your account is securely managed by Firebase.
+Realtime Database is used for shared house data.
 </div>
 
 </div>
 </div>
+
 
 <!-- =====================================================
      APP
@@ -991,6 +945,7 @@ Settings
 
 </aside>
 
+
 <main class="main">
 
 <button class="mobile-menu" onclick="toggleSidebar()">
@@ -1015,6 +970,7 @@ Keep the foyer organized.
 
 </div>
 
+
 <!-- DASHBOARD -->
 
 <section class="page active" id="dashboard">
@@ -1022,52 +978,39 @@ Keep the foyer organized.
 <div class="stats">
 
 <div class="stat">
-
 <div class="stat-label">
 Tasks
 <span>📋</span>
 </div>
-
 <div class="stat-number" id="totalTasks">0</div>
-
 </div>
 
 <div class="stat">
-
 <div class="stat-label">
 Pending
 <span>⏳</span>
 </div>
-
 <div class="stat-number yellow" id="pendingTasks">0</div>
-
 </div>
 
 <div class="stat">
-
 <div class="stat-label">
 Completed
 <span>✓</span>
 </div>
-
 <div class="stat-number green" id="completedTasks">0</div>
-
 </div>
 
 <div class="stat">
-
 <div class="stat-label">
 Total Expenses
 <span>💰</span>
 </div>
-
-<div class="stat-number blue" id="totalExpenses">
-$0.00
+<div class="stat-number blue" id="totalExpenses">$0.00</div>
 </div>
 
 </div>
 
-</div>
 
 <div class="grid">
 
@@ -1091,6 +1034,7 @@ onclick="openTaskModal()">
 
 </div>
 
+
 <div class="card">
 
 <div class="card-header">
@@ -1107,26 +1051,24 @@ onclick="openTaskModal()">
 
 </div>
 
+
 <div>
 
 <div class="card">
 
 <div class="card-header">
-
 <h3>🏆 Contributions</h3>
-
 </div>
 
 <div class="leader" id="leaderboard"></div>
 
 </div>
 
+
 <div class="card">
 
 <div class="card-header">
-
 <h3>💳 Who Owes?</h3>
-
 </div>
 
 <div id="whoOwes"></div>
@@ -1138,6 +1080,7 @@ onclick="openTaskModal()">
 </div>
 
 </section>
+
 
 <!-- TASKS -->
 
@@ -1163,7 +1106,7 @@ onclick="openTaskModal()">
 class="input"
 id="taskSearch"
 placeholder="Search..."
-oninput="renderTasks()">
+oninput="renderTasks">
 
 <select
 class="select"
@@ -1204,6 +1147,7 @@ onchange="renderTasks()">
 
 </section>
 
+
 <!-- EXPENSES -->
 
 <section class="page" id="expenses">
@@ -1225,33 +1169,18 @@ onclick="openExpenseModal()">
 <div class="money-summary">
 
 <div class="money-box">
-
 <span>Total Spent</span>
-
-<strong class="blue" id="expenseTotal">
-$0.00
-</strong>
-
+<strong class="blue" id="expenseTotal">$0.00</strong>
 </div>
 
 <div class="money-box">
-
 <span>Per Person</span>
-
-<strong class="yellow" id="expensePerPerson">
-$0.00
-</strong>
-
+<strong class="yellow" id="expensePerPerson">$0.00</strong>
 </div>
 
 <div class="money-box">
-
 <span>Unpaid</span>
-
-<strong class="red" id="unpaidTotal">
-$0.00
-</strong>
-
+<strong class="red" id="unpaidTotal">$0.00</strong>
 </div>
 
 </div>
@@ -1262,6 +1191,7 @@ $0.00
 
 </section>
 
+
 <!-- PEOPLE -->
 
 <section class="page" id="people">
@@ -1269,9 +1199,7 @@ $0.00
 <div class="card">
 
 <div class="card-header">
-
-<h3>👥 The Five Boys</h3>
-
+<h3>👥 The Five Members</h3>
 </div>
 
 <div class="people" id="peopleGrid"></div>
@@ -1280,6 +1208,7 @@ $0.00
 
 </section>
 
+
 <!-- HISTORY -->
 
 <section class="page" id="history">
@@ -1287,9 +1216,7 @@ $0.00
 <div class="card">
 
 <div class="card-header">
-
 <h3>📜 Activity History</h3>
-
 </div>
 
 <div class="table-wrap">
@@ -1317,6 +1244,7 @@ $0.00
 
 </section>
 
+
 <!-- SETTINGS -->
 
 <section class="page" id="settings">
@@ -1329,48 +1257,63 @@ $0.00
 
 <div id="namesForm"></div>
 
-<button
-class="btn btn-green"
-onclick="saveAccounts()">
-Save Accounts
-</button>
+<div style="
+color:var(--muted);
+font-size:10px;
+line-height:1.7;
+margin-top:10px;">
+
+Users are defined directly in the application code.
+<br>
+To change a name or PIN, edit the
+<code>USERS</code> array in the JavaScript.
 
 </div>
 
+</div>
+
+
 <div class="setting">
 
-<h3>🔐 Your Account</h3>
+<h3>🔐 PIN Information</h3>
 
 <p style="
 color:var(--muted);
 font-size:11px;
-line-height:1.7;
-margin-bottom:15px;
-">
+line-height:1.7;">
 
-Change your personal PIN.
-Your PIN is securely handled by Firebase Authentication.
+The PINs are stored directly in this application.
+<br><br>
+To change a PIN, edit the corresponding
+<strong style="color:white">pin</strong>
+value inside the
+<strong style="color:white">USERS</strong>
+array.
 
 </p>
 
-<input
-class="input"
-id="newPin"
-type="password"
-inputmode="numeric"
-maxlength="6"
-placeholder="New PIN">
+<div style="
+margin-top:15px;
+background:#102238;
+border:1px solid var(--border);
+padding:12px;
+border-radius:10px;
+font-size:10px;
+color:var(--muted);
+line-height:1.7;">
 
-<button
-class="btn btn-green"
-style="margin-top:10px;"
-onclick="changeMyPin()">
+Example:
 
-Change My PIN
+<br>
 
-</button>
+<code style="color:white">
+{ name: "Youssef", pin: "1234" }
+</code>
 
 </div>
+
+</div>
+
 
 <div class="setting">
 
@@ -1380,8 +1323,7 @@ Change My PIN
 color:var(--muted);
 font-size:11px;
 line-height:1.7;
-margin-bottom:15px;
-">
+margin-bottom:15px;">
 
 Resetting removes all tasks,
 expenses, payments and history.
@@ -1391,9 +1333,7 @@ expenses, payments and history.
 <button
 class="btn btn-red"
 onclick="resetAll()">
-
 Reset Everything
-
 </button>
 
 </div>
@@ -1403,10 +1343,12 @@ Reset Everything
 </section>
 
 </main>
-
 </div>
 
-<!-- TASK MODAL -->
+
+<!-- =====================================================
+     TASK MODAL
+===================================================== -->
 
 <div class="modal" id="taskModal">
 
@@ -1461,16 +1403,16 @@ placeholder="Example: Take out trash">
 class="btn btn-green"
 style="width:100%;"
 onclick="addTask()">
-
 Add Task
-
 </button>
 
 </div>
-
 </div>
 
-<!-- EXPENSE MODAL -->
+
+<!-- =====================================================
+     EXPENSE MODAL
+===================================================== -->
 
 <div class="modal" id="expenseModal">
 
@@ -1503,8 +1445,7 @@ border-radius:10px;
 color:var(--muted);
 font-size:10px;
 margin-bottom:15px;
-line-height:1.6;
-">
+line-height:1.6;">
 
 Bought by:
 <strong id="expenseBuyerName" style="color:white"></strong>
@@ -1537,12 +1478,12 @@ border-radius:10px;
 color:var(--muted);
 font-size:10px;
 margin-bottom:15px;
-line-height:1.6;
-">
+line-height:1.6;">
 
 The buyer enters the actual amount.
 <br>
-The amount is automatically divided between the 5 members.
+The amount is automatically divided between the
+<strong style="color:white">5 members</strong>.
 
 </div>
 
@@ -1550,26 +1491,24 @@ The amount is automatically divided between the 5 members.
 class="btn btn-green"
 style="width:100%;"
 onclick="addExpense()">
-
 Add Expense
-
 </button>
 
 </div>
-
 </div>
 
+
 <div class="toast" id="toast"></div>
+
 
 <script>
 
 /* =====================================================
    FIREBASE CONFIG
-   REPLACE THESE VALUES
 ===================================================== */
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBpKdiNp5GpqFQwPrNfPnm_Qo8Y4viFip4",
+    apiKey: "AIzaSyBp5GpqFQwPrNfPnm_Qo8Y4viFip4",
     authDomain: "foyer2bb.firebaseapp.com",
     databaseURL: "https://foyer2bb-default-rtdb.firebaseio.com",
     projectId: "foyer2bb",
@@ -1577,7 +1516,47 @@ const firebaseConfig = {
     messagingSenderId: "94350085938",
     appId: "1:94350085938:web:503f3857773caa9202912b",
     measurementId: "G-BNNR3RHGK9"
-  };
+};
+
+
+/* =====================================================
+   HARD-CODED USERS
+===================================================== */
+
+const USERS = [
+    {
+        id: "youssef",
+        name: "Youssef",
+        pin: "1234"
+    },
+    {
+        id: "eli",
+        name: "Eli",
+        pin: "2345"
+    },
+    {
+        id: "george",
+        name: "George",
+        pin: "3456"
+    },
+    {
+        id: "mike",
+        name: "Mike",
+        pin: "4567"
+    },
+    {
+        id: "anthony",
+        name: "Anthony",
+        pin: "5678"
+    }
+];
+
+
+/* =====================================================
+   ADMIN
+===================================================== */
+
+const ADMIN_ID = "youssef";
 
 
 /* =====================================================
@@ -1586,200 +1565,271 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-const auth =
-    firebase.auth();
-
-const db =
-    firebase.firestore();
+const db = firebase.database();
 
 
 /* =====================================================
-   FIRESTORE COLLECTIONS
+   DATABASE PATHS
 ===================================================== */
 
-const USERS_COLLECTION =
-    "users";
-
-const TASKS_COLLECTION =
-    "tasks";
-
-const EXPENSES_COLLECTION =
-    "expenses";
-
-const HISTORY_COLLECTION =
-    "history";
+const TASKS_PATH = "tasks";
+const EXPENSES_PATH = "expenses";
+const HISTORY_PATH = "history";
 
 
 /* =====================================================
    GLOBAL STATE
 ===================================================== */
 
-let users = [];
-
 let tasks = [];
-
 let expenses = [];
-
 let history = [];
 
 let currentUser = null;
-
 let currentProfile = null;
 
-let firebaseReady = false;
+let databaseListenersStarted = false;
+
+let toastTimer;
 
 
 /* =====================================================
-   FIREBASE HELPERS
+   GET USER
 ===================================================== */
 
-async function loadAllData(){
+function getUserById(id){
 
-    if(!currentUser){
-        return;
-    }
-
-    try{
-
-        const usersSnapshot =
-            await db
-            .collection(USERS_COLLECTION)
-            .orderBy("name")
-            .get();
-
-        users =
-            usersSnapshot.docs.map(
-                doc => ({
-                    id:doc.id,
-                    ...doc.data()
-                })
-            );
-
-
-        const tasksSnapshot =
-            await db
-            .collection(TASKS_COLLECTION)
-            .orderBy(
-                "createdAt",
-                "desc"
-            )
-            .get();
-
-        tasks =
-            tasksSnapshot.docs.map(
-                doc => ({
-                    id:doc.id,
-                    ...doc.data()
-                })
-            );
-
-
-        const expensesSnapshot =
-            await db
-            .collection(EXPENSES_COLLECTION)
-            .orderBy(
-                "createdAt",
-                "desc"
-            )
-            .get();
-
-        expenses =
-            expensesSnapshot.docs.map(
-                doc => ({
-                    id:doc.id,
-                    ...doc.data()
-                })
-            );
-
-
-        const historySnapshot =
-            await db
-            .collection(HISTORY_COLLECTION)
-            .orderBy(
-                "createdAt",
-                "desc"
-            )
-            .get();
-
-        history =
-            historySnapshot.docs.map(
-                doc => ({
-                    id:doc.id,
-                    ...doc.data()
-                })
-            );
-
-
-        firebaseReady = true;
-
-        renderAll();
-
-    }catch(error){
-
-        console.error(
-            "Firebase load error:",
-            error
-        );
-
-        toast(
-            "Could not load Firebase data."
-        );
-
-    }
+    return USERS.find(
+        user => user.id === id
+    ) || null;
 
 }
 
 
 /* =====================================================
-   LOGIN ACCOUNT LIST
+   GET USER NAME
 ===================================================== */
 
-async function setupLogin(){
+function getUserName(id){
+
+    const user = getUserById(id);
+
+    return user
+        ? user.name
+        : "Unknown";
+
+}
+
+
+/* =====================================================
+   ADMIN CHECK
+===================================================== */
+
+function isAdmin(){
+
+    return !!(
+        currentProfile &&
+        currentProfile.id === ADMIN_ID
+    );
+
+}
+
+
+/* =====================================================
+   SNAPSHOT TO ARRAY
+===================================================== */
+
+function snapshotToArray(snapshot){
+
+    const result = [];
+
+    if(!snapshot.exists())
+        return result;
+
+    snapshot.forEach(child => {
+
+        result.push({
+
+            id: child.key,
+
+            ...(child.val() || {})
+
+        });
+
+    });
+
+    return result;
+
+}
+
+
+/* =====================================================
+   REALTIME DATABASE LISTENERS
+===================================================== */
+
+function startRealtimeListeners(){
+
+    if(databaseListenersStarted)
+        return;
+
+    if(!currentUser)
+        return;
+
+    databaseListenersStarted = true;
+
+
+    /* TASKS */
+
+    db.ref(TASKS_PATH).on(
+        "value",
+
+        snapshot => {
+
+            tasks =
+                snapshotToArray(snapshot)
+                .sort(
+                    (a,b) =>
+                    Number(b.createdAt || 0) -
+                    Number(a.createdAt || 0)
+                );
+
+            renderAll();
+
+        },
+
+        error => {
+
+            console.error(
+                "Tasks realtime error:",
+                error
+            );
+
+            showDatabaseError(error);
+
+        }
+    );
+
+
+    /* EXPENSES */
+
+    db.ref(EXPENSES_PATH).on(
+        "value",
+
+        snapshot => {
+
+            expenses =
+                snapshotToArray(snapshot)
+                .sort(
+                    (a,b) =>
+                    Number(b.createdAt || 0) -
+                    Number(a.createdAt || 0)
+                );
+
+            renderAll();
+
+        },
+
+        error => {
+
+            console.error(
+                "Expenses realtime error:",
+                error
+            );
+
+            showDatabaseError(error);
+
+        }
+    );
+
+
+    /* HISTORY */
+
+    db.ref(HISTORY_PATH).on(
+        "value",
+
+        snapshot => {
+
+            history =
+                snapshotToArray(snapshot)
+                .sort(
+                    (a,b) =>
+                    Number(b.createdAt || 0) -
+                    Number(a.createdAt || 0)
+                );
+
+            renderAll();
+
+        },
+
+        error => {
+
+            console.error(
+                "History realtime error:",
+                error
+            );
+
+            showDatabaseError(error);
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   STOP REALTIME DATABASE LISTENERS
+===================================================== */
+
+function stopRealtimeListeners(){
+
+    db.ref(TASKS_PATH).off();
+    db.ref(EXPENSES_PATH).off();
+    db.ref(HISTORY_PATH).off();
+
+    databaseListenersStarted = false;
+
+}
+
+
+/* =====================================================
+   LOGIN SELECT
+===================================================== */
+
+function setupLogin(){
+
+    updateLoginSelect();
+
+}
+
+
+/* =====================================================
+   UPDATE LOGIN SELECT
+===================================================== */
+
+function updateLoginSelect(){
 
     const select =
         document.getElementById(
             "loginUser"
         );
 
+    if(!select)
+        return;
+
+
     select.innerHTML =
-        `<option>Loading...</option>`;
+        `<option value="">
+            Select your account
+        </option>` +
 
-    try{
-
-        const snapshot =
-            await db
-            .collection(
-                USERS_COLLECTION
-            )
-            .orderBy("name")
-            .get();
-
-        users =
-            snapshot.docs.map(
-                doc => ({
-                    id:doc.id,
-                    ...doc.data()
-                })
-            );
-
-        select.innerHTML =
-            users.map(
-                user =>
-                `<option value="${safe(user.email)}">
-                    ${safe(user.name)}
-                </option>`
-            ).join("");
-
-    }catch(error){
-
-        console.error(error);
-
-        select.innerHTML =
-            `<option>
-                Firebase connection error
-            </option>`;
-
-    }
+        USERS
+        .map(
+            user =>
+            `<option value="${attribute(user.id)}">
+                ${safe(user.name)}
+            </option>`
+        )
+        .join("");
 
 }
 
@@ -1788,14 +1838,16 @@ async function setupLogin(){
    LOGIN
 ===================================================== */
 
-async function login(){
+function login(){
 
-    const email =
+    const userId =
         document
         .getElementById(
             "loginUser"
         )
-        .value;
+        .value
+        .trim();
+
 
     const pin =
         document
@@ -1806,7 +1858,7 @@ async function login(){
         .trim();
 
 
-    if(!email || !pin){
+    if(!userId || !pin){
 
         showLoginError(
             "Please select your account and enter your PIN."
@@ -1817,197 +1869,74 @@ async function login(){
     }
 
 
-    try{
-
-        const credential =
-            await auth
-            .signInWithEmailAndPassword(
-                email,
-                pin
-            );
+    const profile =
+        getUserById(userId);
 
 
-        currentUser =
-            credential.user;
-
-
-        const profile =
-            users.find(
-                user =>
-                user.email ===
-                currentUser.email
-            );
-
-
-        if(!profile){
-
-            showLoginError(
-                "Your Firebase account is not configured in Firestore."
-            );
-
-            await auth.signOut();
-
-            return;
-
-        }
-
-
-        currentProfile =
-            profile;
-
-
-        document
-        .getElementById(
-            "loginScreen"
-        )
-        .classList.add("hidden");
-
-
-        document
-        .getElementById(
-            "app"
-        )
-        .classList.remove("hidden");
-
-
-        document
-        .getElementById(
-            "currentUserName"
-        )
-        .textContent =
-        profile.name;
-
-
-        document
-        .getElementById(
-            "loginError"
-        )
-        .style.display =
-        "none";
-
-
-        document
-        .getElementById(
-            "loginPin"
-        )
-        .value="";
-
-
-        await loadAllData();
-
-    }catch(error){
-
-        console.error(
-            "Login error:",
-            error
-        );
+    if(!profile){
 
         showLoginError(
-            firebaseLoginError(error)
+            "This account is not registered."
         );
+
+        return;
 
     }
 
-}
 
+    if(profile.pin !== pin){
 
-function showLoginError(message){
-
-    const error =
-        document.getElementById(
-            "loginError"
+        showLoginError(
+            "Incorrect PIN. Please try again."
         );
 
-    error.textContent =
-        message;
-
-    error.style.display =
-        "block";
-
-}
-
-
-function firebaseLoginError(error){
-
-    switch(error.code){
-
-        case "auth/invalid-credential":
-        case "auth/wrong-password":
-        case "auth/user-not-found":
-            return "Incorrect PIN. Please try again.";
-
-        case "auth/too-many-requests":
-            return "Too many attempts. Please try again later.";
-
-        case "auth/network-request-failed":
-            return "Network error. Check your internet connection.";
-
-        default:
-            return "Unable to login. Please try again.";
+        return;
 
     }
+
+
+    /*
+     * No Firebase Authentication is used.
+     * The user identity is taken from the
+     * hard-coded USERS array.
+     */
+
+    currentProfile = profile;
+
+    currentUser = {
+        uid: profile.id,
+        name: profile.name
+    };
+
+
+    document
+    .getElementById(
+        "loginError"
+    )
+    .style.display =
+    "none";
+
+
+    document
+    .getElementById(
+        "loginPin"
+    )
+    .value = "";
+
+
+    showApp();
+
+
+    startRealtimeListeners();
 
 }
 
 
 /* =====================================================
-   FIREBASE AUTH STATE
+   SHOW APP
 ===================================================== */
 
-auth.onAuthStateChanged(
-async user => {
-
-    if(!user){
-
-        currentUser =
-            null;
-
-        currentProfile =
-            null;
-
-        document
-        .getElementById(
-            "app"
-        )
-        .classList.add("hidden");
-
-        document
-        .getElementById(
-            "loginScreen"
-        )
-        .classList.remove("hidden");
-
-        return;
-
-    }
-
-    currentUser =
-        user;
-
-    if(
-        !users.length
-    ){
-
-        await setupLogin();
-
-    }
-
-    currentProfile =
-        users.find(
-            u =>
-            u.email ===
-            user.email
-        );
-
-
-    if(!currentProfile){
-
-        await auth.signOut();
-
-        return;
-
-    }
-
+function showApp(){
 
     document
     .getElementById(
@@ -2028,52 +1957,137 @@ async user => {
         "currentUserName"
     )
     .textContent =
-    currentProfile.name;
+        currentProfile
+        ? currentProfile.name
+        : "-";
 
 
-    await loadAllData();
+    renderAll();
 
-});
+}
+
+
+/* =====================================================
+   SHOW LOGIN
+===================================================== */
+
+function showLogin(){
+
+    document
+    .getElementById(
+        "app"
+    )
+    .classList.add("hidden");
+
+
+    document
+    .getElementById(
+        "loginScreen"
+    )
+    .classList.remove("hidden");
+
+
+    const pin =
+        document.getElementById(
+            "loginPin"
+        );
+
+
+    if(pin)
+        pin.value = "";
+
+
+    const select =
+        document.getElementById(
+            "loginUser"
+        );
+
+
+    if(select)
+        select.value = "";
+
+}
+
+
+/* =====================================================
+   LOGIN ERROR
+===================================================== */
+
+function showLoginError(message){
+
+    const error =
+        document.getElementById(
+            "loginError"
+        );
+
+
+    if(!error)
+        return;
+
+
+    error.textContent =
+        message;
+
+
+    error.style.display =
+        "block";
+
+}
+
+
+/* =====================================================
+   DATABASE ERROR
+===================================================== */
+
+function databaseErrorMessage(error){
+
+    if(
+        error &&
+        String(error.code || "")
+        .includes("PERMISSION_DENIED")
+    ){
+
+        return "Realtime Database permission denied. Check Firebase Database Rules.";
+
+    }
+
+
+    return "Could not connect to Realtime Database.";
+
+}
+
+
+function showDatabaseError(error){
+
+    console.error(error);
+
+    toast(
+        databaseErrorMessage(error)
+    );
+
+}
 
 
 /* =====================================================
    LOGOUT
 ===================================================== */
 
-async function logout(){
+function logout(){
 
-    try{
+    stopRealtimeListeners();
 
-        await auth.signOut();
+    currentUser = null;
+    currentProfile = null;
 
-        currentUser =
-            null;
+    tasks = [];
+    expenses = [];
+    history = [];
 
-        currentProfile =
-            null;
+    showLogin();
 
-        users=[];
-        tasks=[];
-        expenses=[];
-        history=[];
-
-        document
-        .getElementById(
-            "loginPin"
-        )
-        .value="";
-
-        await setupLogin();
-
-    }catch(error){
-
-        console.error(error);
-
-        toast(
-            "Logout failed."
-        );
-
-    }
+    toast(
+        "Logged out successfully."
+    );
 
 }
 
@@ -2084,8 +2098,7 @@ async function logout(){
 
 function today(){
 
-    const d =
-        new Date();
+    const d = new Date();
 
     const y =
         d.getFullYear();
@@ -2111,8 +2124,9 @@ function formatDate(date){
         return "-";
 
     return new Date(
-        date+"T00:00:00"
-    ).toLocaleDateString(
+        date + "T00:00:00"
+    )
+    .toLocaleDateString(
         "en-US",
         {
             day:"2-digit",
@@ -2132,15 +2146,18 @@ function setupNavigation(){
 
     document
     .querySelectorAll(".nav-btn")
-    .forEach(button=>{
+    .forEach(button => {
 
         button.addEventListener(
             "click",
-            ()=>{
+            () => {
 
-                showPage(
-                    button.dataset.page
-                );
+                const page =
+                    button.dataset.page;
+
+
+                showPage(page);
+
 
                 document
                 .querySelectorAll(
@@ -2153,9 +2170,11 @@ function setupNavigation(){
                     )
                 );
 
+
                 button.classList.add(
                     "active"
                 );
+
 
                 document
                 .getElementById(
@@ -2173,6 +2192,10 @@ function setupNavigation(){
 }
 
 
+/* =====================================================
+   SHOW PAGE
+===================================================== */
+
 function showPage(page){
 
     document
@@ -2186,17 +2209,14 @@ function showPage(page){
 
 
     const target =
-        document.getElementById(
-            page
-        );
+        document.getElementById(page);
+
 
     if(target)
-        target.classList.add(
-            "active"
-        );
+        target.classList.add("active");
 
 
-    const titles={
+    const titles = {
 
         dashboard:[
             "Good evening 👋",
@@ -2214,7 +2234,7 @@ function showPage(page){
         ],
 
         people:[
-            "The Five Boys 👥",
+            "The Five Members 👥",
             "Your foyer members."
         ],
 
@@ -2225,7 +2245,7 @@ function showPage(page){
 
         settings:[
             "Settings ⚙️",
-            "Manage your account."
+            "Manage the house."
         ]
 
     };
@@ -2236,15 +2256,17 @@ function showPage(page){
         document
         .getElementById(
             "pageTitle"
-        ).textContent =
-        titles[page][0];
+        )
+        .textContent =
+            titles[page][0];
 
 
         document
         .getElementById(
             "pageSubtitle"
-        ).textContent =
-        titles[page][1];
+        )
+        .textContent =
+            titles[page][1];
 
     }
 
@@ -2257,8 +2279,9 @@ function showPage(page){
 
 function renderAll(){
 
-    if(!currentUser)
+    if(!currentUser || !currentProfile)
         return;
+
 
     renderStats();
     renderTodayTasks();
@@ -2284,19 +2307,20 @@ function renderStats(){
     const total =
         tasks.length;
 
+
     const pending =
         tasks.filter(
             t =>
-            t.status ===
-            "pending"
+            t.status === "pending"
         ).length;
+
 
     const completed =
         tasks.filter(
             t =>
-            t.status ===
-            "completed"
+            t.status === "completed"
         ).length;
+
 
     const totalExpenses =
         expenses.reduce(
@@ -2310,29 +2334,33 @@ function renderStats(){
     document
     .getElementById(
         "totalTasks"
-    ).textContent =
-    total;
+    )
+    .textContent =
+        total;
 
 
     document
     .getElementById(
         "pendingTasks"
-    ).textContent =
-    pending;
+    )
+    .textContent =
+        pending;
 
 
     document
     .getElementById(
         "completedTasks"
-    ).textContent =
-    completed;
+    )
+    .textContent =
+        completed;
 
 
     document
     .getElementById(
         "totalExpenses"
-    ).textContent =
-    money(totalExpenses);
+    )
+    .textContent =
+        money(totalExpenses);
 
 }
 
@@ -2346,8 +2374,7 @@ function renderTodayTasks(){
     const todayTasks =
         tasks.filter(
             t =>
-            t.date ===
-            today()
+            t.date === today()
         );
 
 
@@ -2355,6 +2382,10 @@ function renderTodayTasks(){
         document.getElementById(
             "todayTasks"
         );
+
+
+    if(!box)
+        return;
 
 
     if(!todayTasks.length){
@@ -2380,33 +2411,14 @@ function renderTodayTasks(){
 }
 
 
-function getUserById(id){
-
-    return users.find(
-        user =>
-        user.id === id
-    );
-
-}
-
-
-function getUserName(id){
-
-    const user =
-        getUserById(id);
-
-    return user
-        ? user.name
-        : "Unknown";
-
-}
-
+/* =====================================================
+   TASK CARD
+===================================================== */
 
 function taskCard(task){
 
     const done =
-        task.status ===
-        "completed";
+        task.status === "completed";
 
 
     return `
@@ -2428,22 +2440,20 @@ function taskCard(task){
                 <div class="task-person">
                     👤
                     ${safe(
-                        getUserName(
-                            task.personId
-                        )
+                        getUserName(task.personId)
                     )}
                 </div>
 
                 <span class="status ${
                     done
-                    ?"completed"
-                    :"pending"
+                    ? "completed"
+                    : "pending"
                 }">
 
                     ${
                     done
-                    ?"✓ Completed"
-                    :"⏳ Pending"
+                    ? "✓ Completed"
+                    : "⏳ Pending"
                     }
 
                 </span>
@@ -2458,15 +2468,15 @@ function taskCard(task){
         `<button
             class="btn ${
                 done
-                ?"btn-dark"
-                :"btn-green"
+                ? "btn-dark"
+                : "btn-green"
             }"
-            onclick="toggleTask('${task.id}')">
+            onclick="toggleTask('${attribute(task.id)}')">
 
             ${
             done
-            ?"Undo"
-            :"Complete"
+            ? "Undo"
+            : "Complete"
             }
 
         </button>`
@@ -2477,9 +2487,7 @@ function taskCard(task){
 
             Assigned to
             ${safe(
-                getUserName(
-                    task.personId
-                )
+                getUserName(task.personId)
             )}
 
         </span>`
@@ -2494,7 +2502,7 @@ function taskCard(task){
 
 function canCompleteTask(task){
 
-    return (
+    return !!(
         currentProfile &&
         task.personId ===
         currentProfile.id
@@ -2504,7 +2512,7 @@ function canCompleteTask(task){
 
 
 /* =====================================================
-   COMPLETE TASK
+   TOGGLE TASK
 ===================================================== */
 
 async function toggleTask(id){
@@ -2532,8 +2540,7 @@ async function toggleTask(id){
 
 
     const newStatus =
-        task.status ===
-        "pending"
+        task.status === "pending"
         ? "completed"
         : "pending";
 
@@ -2541,17 +2548,15 @@ async function toggleTask(id){
     try{
 
         await db
-        .collection(
-            TASKS_COLLECTION
+        .ref(
+            `${TASKS_PATH}/${id}`
         )
-        .doc(id)
         .update({
 
-            status:
-                newStatus,
+            status:newStatus,
 
             updatedAt:
-                firebase.firestore.FieldValue.serverTimestamp(),
+                firebase.database.ServerValue.TIMESTAMP,
 
             updatedBy:
                 currentUser.uid
@@ -2559,23 +2564,14 @@ async function toggleTask(id){
         });
 
 
-        if(
-            newStatus ===
-            "completed"
-        ){
+        if(newStatus === "completed"){
 
             await addHistory(
-
                 "Task",
-
                 `${task.icon} ${task.name}`
-
             );
 
         }
-
-
-        await loadAllData();
 
     }catch(error){
 
@@ -2638,8 +2634,7 @@ function renderTasks(){
         filtered =
             filtered.filter(
                 t =>
-                t.status ===
-                filter
+                t.status === filter
             );
 
     }
@@ -2649,6 +2644,10 @@ function renderTasks(){
         document.getElementById(
             "tasksTable"
         );
+
+
+    if(!tbody)
+        return;
 
 
     if(!filtered.length){
@@ -2670,7 +2669,8 @@ function renderTasks(){
 
 
     tbody.innerHTML =
-        filtered.map(
+        filtered
+        .map(
             task => `
 
         <tr>
@@ -2682,34 +2682,28 @@ function renderTasks(){
 
             <td>
                 ${safe(
-                    getUserName(
-                        task.personId
-                    )
+                    getUserName(task.personId)
                 )}
             </td>
 
             <td>
                 ${safe(
-                    getUserName(
-                        task.addedById
-                    )
+                    getUserName(task.addedById)
                 )}
             </td>
 
             <td>
 
                 <span class="badge ${
-                    task.status ===
-                    "completed"
-                    ?"completed"
-                    :"pending"
+                    task.status === "completed"
+                    ? "completed"
+                    : "pending"
                 }">
 
                     ${
-                    task.status ===
-                    "completed"
-                    ?"Completed"
-                    :"Pending"
+                    task.status === "completed"
+                    ? "Completed"
+                    : "Pending"
                     }
 
                 </span>
@@ -2723,13 +2717,12 @@ function renderTasks(){
                 ?
                 `<button
                     class="btn btn-dark"
-                    onclick="toggleTask('${task.id}')">
+                    onclick="toggleTask('${attribute(task.id)}')">
 
                     ${
-                    task.status ===
-                    "completed"
-                    ?"Undo"
-                    :"Complete"
+                    task.status === "completed"
+                    ? "Undo"
+                    : "Complete"
                     }
 
                 </button>`
@@ -2742,7 +2735,8 @@ function renderTasks(){
         </tr>
 
         `
-        ).join("");
+        )
+        .join("");
 
 }
 
@@ -2776,6 +2770,17 @@ function closeTaskModal(){
 
 
 async function addTask(){
+
+    if(!currentProfile || !currentUser){
+
+        toast(
+            "Please log in first."
+        );
+
+        return;
+
+    }
+
 
     const name =
         document
@@ -2826,11 +2831,13 @@ async function addTask(){
 
     try{
 
-        await db
-        .collection(
-            TASKS_COLLECTION
-        )
-        .add({
+        const newRef =
+            db
+            .ref(TASKS_PATH)
+            .push();
+
+
+        await newRef.set({
 
             name:name,
 
@@ -2848,7 +2855,7 @@ async function addTask(){
                 "pending",
 
             createdAt:
-                firebase.firestore.FieldValue.serverTimestamp(),
+                firebase.database.ServerValue.TIMESTAMP,
 
             createdBy:
                 currentUser.uid
@@ -2862,8 +2869,6 @@ async function addTask(){
         );
 
 
-        await loadAllData();
-
         closeTaskModal();
 
 
@@ -2871,7 +2876,7 @@ async function addTask(){
         .getElementById(
             "taskName"
         )
-        .value="";
+        .value = "";
 
 
         toast(
@@ -2883,7 +2888,7 @@ async function addTask(){
         console.error(error);
 
         toast(
-            "Could not save task."
+            databaseErrorMessage(error)
         );
 
     }
@@ -2902,7 +2907,9 @@ function openExpenseModal(){
         "expenseBuyerName"
     )
     .textContent =
-    currentProfile.name;
+        currentProfile
+        ? currentProfile.name
+        : "";
 
 
     document
@@ -2915,6 +2922,17 @@ function openExpenseModal(){
 
 
 async function addExpense(){
+
+    if(!currentProfile || !currentUser){
+
+        toast(
+            "Please log in first."
+        );
+
+        return;
+
+    }
+
 
     const name =
         document
@@ -2959,14 +2977,13 @@ async function addExpense(){
 
     const share =
         price /
-        users.length;
+        USERS.length;
 
 
-    const paid =
-        {};
+    const paid = {};
 
-    
-    users.forEach(
+
+    USERS.forEach(
         user => {
 
             paid[user.id] =
@@ -2979,11 +2996,13 @@ async function addExpense(){
 
     try{
 
-        await db
-        .collection(
-            EXPENSES_COLLECTION
-        )
-        .add({
+        const newRef =
+            db
+            .ref(EXPENSES_PATH)
+            .push();
+
+
+        await newRef.set({
 
             name:name,
 
@@ -3003,7 +3022,7 @@ async function addExpense(){
                 today(),
 
             createdAt:
-                firebase.firestore.FieldValue.serverTimestamp(),
+                firebase.database.ServerValue.TIMESTAMP,
 
             createdBy:
                 currentUser.uid
@@ -3012,15 +3031,10 @@ async function addExpense(){
 
 
         await addHistory(
-
             "Expense",
-
             `${name} — ${money(price)}`
-
         );
 
-
-        await loadAllData();
 
         closeExpenseModal();
 
@@ -3029,14 +3043,14 @@ async function addExpense(){
         .getElementById(
             "expenseName"
         )
-        .value="";
+        .value = "";
 
 
         document
         .getElementById(
             "expensePrice"
         )
-        .value="";
+        .value = "";
 
 
         toast(
@@ -3048,7 +3062,7 @@ async function addExpense(){
         console.error(error);
 
         toast(
-            "Could not save expense."
+            databaseErrorMessage(error)
         );
 
     }
@@ -3062,15 +3076,13 @@ function closeExpenseModal(){
     .getElementById(
         "expenseModal"
     )
-    .classList.remove(
-        "show"
-    );
+    .classList.remove("show");
 
 }
 
 
 /* =====================================================
-   EXPENSE RENDER
+   RECENT EXPENSES
 ===================================================== */
 
 function renderRecentExpenses(){
@@ -3081,16 +3093,17 @@ function renderRecentExpenses(){
         );
 
 
+    if(!box)
+        return;
+
+
     const recent =
-        expenses.slice(
-            0,
-            3
-        );
+        expenses.slice(0,3);
 
 
     if(!recent.length){
 
-        box.innerHTML=`
+        box.innerHTML = `
         <div style="
         text-align:center;
         color:var(--muted);
@@ -3112,6 +3125,10 @@ function renderRecentExpenses(){
 }
 
 
+/* =====================================================
+   EXPENSES
+===================================================== */
+
 function renderExpenses(){
 
     const box =
@@ -3120,11 +3137,12 @@ function renderExpenses(){
         );
 
 
-    let total =
-        0;
+    if(!box)
+        return;
 
-    let unpaid =
-        0;
+
+    let total = 0;
+    let unpaid = 0;
 
 
     expenses.forEach(
@@ -3137,21 +3155,17 @@ function renderExpenses(){
 
 
             const paid =
-                expense.paid ||
-                {};
+                expense.paid || {};
 
 
-            users.forEach(
+            USERS.forEach(
                 user => {
 
-                    if(
-                        !paid[user.id]
-                    ){
+                    if(!paid[user.id]){
 
                         unpaid +=
                             Number(
-                                expense.share ||
-                                0
+                                expense.share || 0
                             );
 
                     }
@@ -3166,31 +3180,34 @@ function renderExpenses(){
     document
     .getElementById(
         "expenseTotal"
-    ).textContent =
-    money(total);
+    )
+    .textContent =
+        money(total);
 
 
     document
     .getElementById(
         "expensePerPerson"
-    ).textContent =
-    money(
-        users.length
-        ? total/users.length
-        : 0
-    );
+    )
+    .textContent =
+        money(
+            USERS.length
+            ? total / USERS.length
+            : 0
+        );
 
 
     document
     .getElementById(
         "unpaidTotal"
-    ).textContent =
-    money(unpaid);
+    )
+    .textContent =
+        money(unpaid);
 
 
     if(!expenses.length){
 
-        box.innerHTML=`
+        box.innerHTML = `
         <div style="
         text-align:center;
         color:var(--muted);
@@ -3214,12 +3231,11 @@ function renderExpenses(){
 function expenseCard(expense){
 
     const paid =
-        expense.paid ||
-        {};
+        expense.paid || {};
 
 
     const paidCount =
-        users.filter(
+        USERS.filter(
             user =>
             paid[user.id]
         ).length;
@@ -3234,7 +3250,7 @@ function expenseCard(expense){
             <div>
 
                 <div class="expense-name">
-                    🧼
+                    💰
                     ${safe(expense.name)}
                 </div>
 
@@ -3250,9 +3266,7 @@ function expenseCard(expense){
                     </strong>
 
                     ·
-                    ${safe(
-                        expense.date
-                    )}
+                    ${safe(expense.date)}
 
                 </div>
 
@@ -3276,7 +3290,7 @@ function expenseCard(expense){
             </span>
 
             <span>
-                ${paidCount}/${users.length} paid
+                ${paidCount}/${USERS.length} paid
             </span>
 
         </div>
@@ -3285,7 +3299,7 @@ function expenseCard(expense){
         <div class="split">
 
         ${
-            users.map(
+            USERS.map(
                 user => {
 
                     const isPaid =
@@ -3296,38 +3310,31 @@ function expenseCard(expense){
 
                     <div class="split-person ${
                         isPaid
-                        ?"paid"
-                        :"owes"
+                        ? "paid"
+                        : "owes"
                     }">
 
-                        ${safe(
-                            user.name
-                        )}
+                        ${safe(user.name)}
 
                         <span>
 
                             ${
                             isPaid
-                            ?"✓ PAID"
-                            :money(
-                                expense.share
-                            )
+                            ? "✓ PAID"
+                            : money(expense.share)
                             }
 
                         </span>
 
-
                         ${
                         !isPaid &&
+                        currentProfile &&
                         user.id ===
                         currentProfile.id
                         ?
                         `<button
                             class="pay-btn"
-                            onclick="
-                            markPaid(
-                                '${expense.id}'
-                            )">
+                            onclick="markPaid('${attribute(expense.id)}')">
 
                             PAY
 
@@ -3357,77 +3364,54 @@ function expenseCard(expense){
    MARK PAID
 ===================================================== */
 
-async function markPaid(
-    expenseId
-){
+async function markPaid(expenseId){
 
     const expense =
         expenses.find(
             e =>
-            e.id ===
-            expenseId
+            e.id === expenseId
         );
 
 
-    if(!expense)
+    if(!expense || !currentProfile)
         return;
 
 
-    if(
-        !currentProfile
-    )
+    const paid = {
+        ...(expense.paid || {})
+    };
+
+
+    if(paid[currentProfile.id])
         return;
 
 
-    const paid =
-        {
-            ...(expense.paid || {})
-        };
-
-
-    if(
-        paid[
-            currentProfile.id
-        ]
-    ){
-
-        return;
-
-    }
-
-
-    paid[
-        currentProfile.id
-    ] = true;
+    paid[currentProfile.id] = true;
 
 
     try{
 
         await db
-        .collection(
-            EXPENSES_COLLECTION
+        .ref(
+            `${EXPENSES_PATH}/${expenseId}`
         )
-        .doc(expenseId)
         .update({
 
             paid:paid,
 
             updatedAt:
-                firebase.firestore.FieldValue.serverTimestamp()
+                firebase.database.ServerValue.TIMESTAMP,
+
+            updatedBy:
+                currentUser.uid
 
         });
 
 
         await addHistory(
-
             "Payment",
-
             `${expense.name} — ${money(expense.share)}`
-
         );
-
-
-        await loadAllData();
 
 
         toast(
@@ -3459,31 +3443,30 @@ function renderWhoOwes(){
         );
 
 
+    if(!box || !currentProfile)
+        return;
+
+
     box.innerHTML =
-        users
+        USERS
         .map(
             user => {
 
-                let owes =
-                    0;
+                let owes = 0;
 
 
                 expenses.forEach(
                     expense => {
 
                         const paid =
-                            expense.paid ||
-                            {};
+                            expense.paid || {};
 
 
-                        if(
-                            !paid[user.id]
-                        ){
+                        if(!paid[user.id]){
 
                             owes +=
                                 Number(
-                                    expense.share ||
-                                    0
+                                    expense.share || 0
                                 );
 
                         }
@@ -3508,22 +3491,22 @@ function renderWhoOwes(){
                         ${
                         user.id ===
                         currentProfile.id
-                        ?" <strong>(You)</strong>"
-                        :""
+                        ? " <strong>(You)</strong>"
+                        : ""
                         }
 
                     </span>
 
                     <strong class="${
                         owes > 0
-                        ?"red"
-                        :"green"
+                        ? "red"
+                        : "green"
                     }">
 
                         ${
                         owes > 0
-                        ?money(owes)
-                        :"✓ Paid"
+                        ? money(owes)
+                        : "✓ Paid"
                         }
 
                     </strong>
@@ -3545,23 +3528,30 @@ function renderWhoOwes(){
 
 function renderLeaderboard(){
 
+    const box =
+        document.getElementById(
+            "leaderboard"
+        );
+
+
+    if(!box || !currentProfile)
+        return;
+
+
     const scores =
-        users
+        USERS
         .map(
             user => {
 
-                let score =
-                    0;
+                let score = 0;
 
 
                 tasks.forEach(
                     task => {
 
                         if(
-                            task.personId ===
-                            user.id &&
-                            task.status ===
-                            "completed"
+                            task.personId === user.id &&
+                            task.status === "completed"
                         ){
 
                             score++;
@@ -3576,12 +3566,10 @@ function renderLeaderboard(){
                     expense => {
 
                         if(
-                            expense.buyerId ===
-                            user.id
+                            expense.buyerId === user.id
                         ){
 
-                            score +=
-                                2;
+                            score += 2;
 
                         }
 
@@ -3590,31 +3578,20 @@ function renderLeaderboard(){
 
 
                 return {
-
-                    name:
-                        user.name,
-
-                    id:
-                        user.id,
-
-                    score:
-                        score
-
+                    name:user.name,
+                    id:user.id,
+                    score:score
                 };
 
             }
         )
         .sort(
             (a,b) =>
-            b.score-a.score
+            b.score - a.score
         );
 
 
-    document
-    .getElementById(
-        "leaderboard"
-    )
-    .innerHTML =
+    box.innerHTML =
         scores
         .map(
             (person,index) => `
@@ -3626,33 +3603,26 @@ function renderLeaderboard(){
             </div>
 
             <div class="avatar">
-                ${initials(
-                    person.name
-                )}
+                ${initials(person.name)}
             </div>
 
             <div class="person-info">
 
                 <strong>
 
-                    ${safe(
-                        person.name
-                    )}
+                    ${safe(person.name)}
 
                     ${
-                    person.id ===
-                    currentProfile.id
-                    ?" (You)"
-                    :""
+                    person.id === currentProfile.id
+                    ? " (You)"
+                    : ""
                     }
 
                 </strong>
 
                 <small>
 
-                    ${completedBy(
-                        person.id
-                    )}
+                    ${completedBy(person.id)}
                     tasks completed
 
                 </small>
@@ -3676,10 +3646,8 @@ function completedBy(id){
 
     return tasks.filter(
         task =>
-        task.personId ===
-        id &&
-        task.status ===
-        "completed"
+        task.personId === id &&
+        task.status === "completed"
     ).length;
 
 }
@@ -3691,34 +3659,35 @@ function completedBy(id){
 
 function renderPeople(){
 
-    document
-    .getElementById(
-        "peopleGrid"
-    )
-    .innerHTML =
+    const box =
+        document.getElementById(
+            "peopleGrid"
+        );
 
-    users.map(
-        user => `
+
+    if(!box || !currentProfile)
+        return;
+
+
+    box.innerHTML =
+        USERS
+        .map(
+            user => `
 
         <div class="person-card">
 
             <div class="big-avatar">
-                ${initials(
-                    user.name
-                )}
+                ${initials(user.name)}
             </div>
 
             <h3>
 
-                ${safe(
-                    user.name
-                )}
+                ${safe(user.name)}
 
                 ${
-                user.id ===
-                currentProfile.id
-                ?" (You)"
-                :""
+                user.id === currentProfile.id
+                ? " (You)"
+                : ""
                 }
 
             </h3>
@@ -3729,9 +3698,7 @@ function renderPeople(){
 
             <div class="score">
 
-                ${completedBy(
-                    user.id
-                )}
+                ${completedBy(user.id)}
 
                 tasks completed
 
@@ -3740,7 +3707,8 @@ function renderPeople(){
         </div>
 
         `
-    ).join("");
+        )
+        .join("");
 
 }
 
@@ -3757,9 +3725,13 @@ function renderHistory(){
         );
 
 
+    if(!tbody)
+        return;
+
+
     if(!history.length){
 
-        tbody.innerHTML=`
+        tbody.innerHTML = `
         <tr>
         <td colspan="4"
         style="
@@ -3783,15 +3755,11 @@ function renderHistory(){
         <tr>
 
             <td>
-                ${safe(
-                    item.type
-                )}
+                ${safe(item.type)}
             </td>
 
             <td>
-                ${safe(
-                    item.details
-                )}
+                ${safe(item.details)}
             </td>
 
             <td>
@@ -3803,9 +3771,7 @@ function renderHistory(){
             </td>
 
             <td>
-                ${safe(
-                    item.date
-                )}
+                ${safe(item.date)}
             </td>
 
         </tr>
@@ -3818,7 +3784,7 @@ function renderHistory(){
 
 
 /* =====================================================
-   HISTORY ADD
+   ADD HISTORY
 ===================================================== */
 
 async function addHistory(
@@ -3826,17 +3792,22 @@ async function addHistory(
     details
 ){
 
-    if(!currentProfile)
+    if(
+        !currentProfile ||
+        !currentUser
+    )
         return;
 
 
     try{
 
-        await db
-        .collection(
-            HISTORY_COLLECTION
-        )
-        .add({
+        const newRef =
+            db
+            .ref(HISTORY_PATH)
+            .push();
+
+
+        await newRef.set({
 
             type:type,
 
@@ -3850,7 +3821,7 @@ async function addHistory(
                 .toLocaleString(),
 
             createdAt:
-                firebase.firestore.FieldValue.serverTimestamp(),
+                firebase.database.ServerValue.TIMESTAMP,
 
             createdBy:
                 currentUser.uid
@@ -3885,15 +3856,32 @@ function fillPeople(){
         return;
 
 
+    const oldValue =
+        select.value;
+
+
     select.innerHTML =
-        users
+        USERS
         .map(
             user =>
-            `<option value="${safe(user.id)}">
+            `<option value="${attribute(user.id)}">
                 ${safe(user.name)}
             </option>`
         )
         .join("");
+
+
+    if(
+        oldValue &&
+        USERS.some(
+            user =>
+            user.id === oldValue
+        )
+    ){
+
+        select.value = oldValue;
+
+    }
 
 }
 
@@ -3910,47 +3898,59 @@ function renderAccounts(){
         );
 
 
-    if(!currentProfile)
+    if(!box || !currentProfile)
         return;
 
 
     box.innerHTML =
-        users
+        USERS
         .map(
-            (user,index) => `
+            user => `
 
-        <div class="name-row">
+        <div style="
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:10px;
+        margin-bottom:8px;
+        background:#0a1828;
+        border:1px solid var(--border);
+        border-radius:10px;">
 
-            <div class="name-number">
-                ${index+1}
+            <div class="avatar">
+                ${initials(user.name)}
             </div>
 
-            <input
-                class="input"
-                id="accountName_${safe(user.id)}"
-                value="${attribute(user.name)}"
-                ${
-                    user.id !==
-                    currentProfile.id
-                    ?"disabled"
-                    :""
-                }>
+            <div style="flex:1">
+
+                <strong style="font-size:12px">
+                    ${safe(user.name)}
+                </strong>
+
+                <div style="
+                color:var(--muted);
+                font-size:9px;
+                margin-top:4px;">
+
+                    Foyer Member
+
+                </div>
+
+            </div>
+
+            ${
+            user.id === currentProfile.id
+            ?
+            `<span style="
+            color:var(--green);
+            font-size:9px;">
+            YOU
+            </span>`
+            :
+            ""
+            }
 
         </div>
-
-        ${
-        user.id ===
-        currentProfile.id
-        ?
-        `<div style="
-        color:var(--muted);
-        font-size:8px;
-        margin:-5px 0 10px 38px">
-        You can edit your own name.
-        </div>`
-        :
-        ""
-        }
 
         `
         )
@@ -3959,228 +3959,51 @@ function renderAccounts(){
 }
 
 
-async function saveAccounts(){
-
-    if(!currentProfile)
-        return;
-
-
-    const input =
-        document.getElementById(
-            `accountName_${currentProfile.id}`
-        );
-
-
-    if(!input)
-        return;
-
-
-    const newName =
-        input.value.trim();
-
-
-    if(!newName){
-
-        toast(
-            "Name cannot be empty."
-        );
-
-        return;
-
-    }
-
-
-    try{
-
-        await db
-        .collection(
-            USERS_COLLECTION
-        )
-        .doc(
-            currentProfile.id
-        )
-        .update({
-
-            name:newName,
-
-            updatedAt:
-                firebase.firestore.FieldValue.serverTimestamp()
-
-        });
-
-
-        currentProfile.name =
-            newName;
-
-
-        await setupLogin();
-
-        await loadAllData();
-
-
-        document
-        .getElementById(
-            "currentUserName"
-        )
-        .textContent =
-        newName;
-
-
-        toast(
-            "Your name was updated ✓"
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        toast(
-            "Could not update your name."
-        );
-
-    }
-
-}
-
-
 /* =====================================================
-   CHANGE PIN
-===================================================== */
-
-async function changeMyPin(){
-
-    const newPin =
-        document
-        .getElementById(
-            "newPin"
-        )
-        .value
-        .trim();
-
-
-    if(
-        !/^[0-9]{4,6}$/.test(
-            newPin
-        )
-    ){
-
-        toast(
-            "PIN must contain 4 to 6 numbers."
-        );
-
-        return;
-
-    }
-
-
-    try{
-
-        await currentUser
-        .updatePassword(
-            newPin
-        );
-
-
-        document
-        .getElementById(
-            "newPin"
-        )
-        .value="";
-
-
-        toast(
-            "Your PIN was changed successfully ✓"
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-
-        if(
-            error.code ===
-            "auth/requires-recent-login"
-        ){
-
-            toast(
-                "Please log out and log in again before changing your PIN."
-            );
-
-            return;
-
-        }
-
-
-        toast(
-            "Could not change your PIN."
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   RESET
+   RESET EVERYTHING
 ===================================================== */
 
 async function resetAll(){
+
+    if(!isAdmin()){
+
+        toast(
+            "Only Youssef (Admin) can reset everything."
+        );
+
+        return;
+
+    }
+
 
     if(
         !confirm(
             "Reset all tasks, expenses, payments and history?"
         )
-    )
+    ){
+
         return;
+
+    }
 
 
     try{
 
-        const batch =
-            db.batch();
+        await Promise.all([
 
+            db
+            .ref(TASKS_PATH)
+            .remove(),
 
-        const collections = [
+            db
+            .ref(EXPENSES_PATH)
+            .remove(),
 
-            TASKS_COLLECTION,
+            db
+            .ref(HISTORY_PATH)
+            .remove()
 
-            EXPENSES_COLLECTION,
-
-            HISTORY_COLLECTION
-
-        ];
-
-
-        for(
-            const collectionName
-            of collections
-        ){
-
-            const snapshot =
-                await db
-                .collection(
-                    collectionName
-                )
-                .get();
-
-
-            snapshot.docs.forEach(
-                doc => {
-
-                    batch.delete(
-                        doc.ref
-                    );
-
-                }
-            );
-
-        }
-
-
-        await batch.commit();
-
-
-        await loadAllData();
+        ]);
 
 
         toast(
@@ -4192,7 +4015,7 @@ async function resetAll(){
         console.error(error);
 
         toast(
-            "Could not reset data."
+            databaseErrorMessage(error)
         );
 
     }
@@ -4239,8 +4062,7 @@ function initials(name){
     .split(" ")
     .filter(Boolean)
     .map(
-        x =>
-        x[0]
+        x => x[0]
     )
     .join("")
     .substring(0,2)
@@ -4254,26 +4076,11 @@ function safe(value){
     return String(
         value ?? ""
     )
-    .replaceAll(
-        "&",
-        "&amp;"
-    )
-    .replaceAll(
-        "<",
-        "&lt;"
-    )
-    .replaceAll(
-        ">",
-        "&gt;"
-    )
-    .replaceAll(
-        '"',
-        "&quot;"
-    )
-    .replaceAll(
-        "'",
-        "&#039;"
-    );
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 
 }
 
@@ -4289,15 +4096,16 @@ function attribute(value){
    TOAST
 ===================================================== */
 
-let toastTimer;
-
-
 function toast(message){
 
     const box =
         document.getElementById(
             "toast"
         );
+
+
+    if(!box)
+        return;
 
 
     box.textContent =
@@ -4316,10 +4124,12 @@ function toast(message){
 
     toastTimer =
         setTimeout(
-            ()=>{
+            () => {
+
                 box.classList.remove(
                     "show"
                 );
+
             },
             3000
         );
@@ -4332,17 +4142,12 @@ function toast(message){
 ===================================================== */
 
 document
-.getElementById(
-    "taskModal"
-)
+.getElementById("taskModal")
 .addEventListener(
     "click",
     function(e){
 
-        if(
-            e.target ===
-            this
-        ){
+        if(e.target === this){
 
             closeTaskModal();
 
@@ -4353,17 +4158,12 @@ document
 
 
 document
-.getElementById(
-    "expenseModal"
-)
+.getElementById("expenseModal")
 .addEventListener(
     "click",
     function(e){
 
-        if(
-            e.target ===
-            this
-        ){
+        if(e.target === this){
 
             closeExpenseModal();
 
@@ -4377,10 +4177,7 @@ document.addEventListener(
     "keydown",
     e => {
 
-        if(
-            e.key ===
-            "Escape"
-        ){
+        if(e.key === "Escape"){
 
             closeTaskModal();
 
@@ -4398,7 +4195,7 @@ document.addEventListener(
 
 document.addEventListener(
     "DOMContentLoaded",
-    async () => {
+    () => {
 
         document
         .getElementById(
@@ -4419,8 +4216,12 @@ document.addEventListener(
 
         setupNavigation();
 
+        setupLogin();
 
-        await setupLogin();
+        /*
+         * Database listeners are intentionally
+         * started after successful hard-coded login.
+         */
 
     }
 );
